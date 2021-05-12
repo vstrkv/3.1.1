@@ -3,6 +3,7 @@ package CRUD.controller;
 import CRUD.UserService.UserService;
 import CRUD.model.Role;
 import CRUD.model.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
@@ -17,12 +18,13 @@ import java.util.Set;
 @Controller
 @RequestMapping("/")
 public class UserController {
+    @Autowired
     private final UserService userService;
-    private final Set<Role> allRoles;
 
-    public UserController(@Qualifier("userService") UserService userService, Set<Role> allRoles) {
+
+
+    public UserController(@Qualifier("userService") UserService userService) {
         this.userService = userService;
-        this.allRoles = allRoles;
     }
 
     @RequestMapping(value = "login", method = RequestMethod.GET)
@@ -48,7 +50,7 @@ public class UserController {
     public String updateUserForm(@PathVariable("id") long id, ModelMap model) {
         User user = userService.getUser(id);
         model.addAttribute("user", user);
-        model.addAttribute("allRoles", allRoles);
+        model.addAttribute("allRoles", userService.getAllRoles());
         return "updateUser";
     }
 
@@ -70,7 +72,7 @@ public class UserController {
     @RolesAllowed(value = "ROLE_ADMIN")
     @GetMapping("/addUser")
     public String addUserForm(@ModelAttribute User user, ModelMap model) {
-        model.addAttribute("allRoles", allRoles);
+        model.addAttribute("allRoles", userService.getAllRoles());
         return "addUser";
     }
 
@@ -81,7 +83,7 @@ public class UserController {
         if (user.getRoles().isEmpty()) {
             user.addRole(new Role("USER"));
         }
-        allRoles.stream().filter(role -> user.getRoles().contains(new Role(role.getName()))).forEach(temp::add);
+        userService.getAllRoles().stream().filter(role -> user.getRoles().contains(new Role(role.getName()))).forEach(temp::add);
         user.setRoles(temp);
         userService.setUser(user);
         return "redirect:/admin";
